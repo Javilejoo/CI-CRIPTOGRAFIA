@@ -32,5 +32,6 @@ def cesar_descifrar(mensaje_cifrado, desplazamiento):
             descifrado += char
     return descifrado
 
-print(cesar_cifrar("abc", 3))
-print(cesar_descifrar("def", 3))
+if __name__ == "__main__":
+    print(cesar_cifrar("abc", 3))
+    print(cesar_descifrar("def", 3))
