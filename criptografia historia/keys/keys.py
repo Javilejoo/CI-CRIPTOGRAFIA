@@ -225,4 +225,5 @@ if __name__ == "__main__":
         print(f"Mensaje en ASCII: {valores_mensaje}")
         print(f"Semilla: {semilla}")
         print(f"Llave dinámica: {valores_llave}")
+        print(f"Llave en ASCII: '{llave_string}'")
         print(f"{'='*50}")
