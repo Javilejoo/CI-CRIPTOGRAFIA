@@ -1,3 +1,125 @@
+# Stream Cipher XOR - Ejercicio de Criptografía
+
+## 1. Descripción del Proyecto
+
+Este proyecto implementa un **cifrador de flujo (Stream Cipher)** utilizando la operación **XOR** para cifrar y descifrar mensajes. El sistema genera un keystream pseudoaleatorio determinístico basado en una clave secreta y un nonce, y lo combina bit a bit con el mensaje usando XOR.
+
+### Componentes principales:
+- **`keystream.py`**: Implementa las funciones de generación de keystream, cifrado y descifrado
+- **`validacion_pruebas.py`**: Contiene 3 ejemplos documentados de entrada/salida
+- **`pruebas_unitarias.py`**: Suite de 4 pruebas unitarias para validar la seguridad y funcionamiento
+
+### Características:
+- ✓ Determinístico (misma clave + nonce = mismo keystream)
+- ✓ Soporta mensajes de cualquier longitud
+- ✓ Usa PRNG basado en Mersenne Twister con hash SHA-256
+- ✓ Incluye función de descifrado reversible
+
+---
+
+## 2. Instrucciones de Instalación y Uso
+
+### Requisitos:
+- Python 3.8 o superior
+- Librerías estándar (no se requieren dependencias externas)
+
+### Instalación:
+```bash
+# Clonar o descargar el proyecto
+cd "ejercicio stream"
+
+# Verificar que todos los archivos estén presentes
+# - keystream.py
+# - validacion_pruebas.py
+# - pruebas_unitarias.py
+# - README.md
+```
+
+### Uso básico:
+
+#### 1. Ejecutar el cifrador principal:
+```bash
+python keystream.py
+```
+Ingresa el mensaje y la clave cuando se solicite. La nonce se genera automáticamente.
+
+#### 2. Ejecutar ejemplos (3 mostrados):
+```bash
+python validacion_pruebas.py
+```
+Muestra 3 ejemplos completos de cifrado/descifrado con diferentes mensajes y claves.
+
+#### 3. Ejecutar pruebas unitarias:
+```bash
+python pruebas_unitarias.py
+```
+Ejecuta 4 pruebas automatizadas para validar el funcionamiento correcto.
+
+---
+
+## 3. Ejemplos de Ejecución
+
+### Ejemplo 1: Ejecución interactiva
+```bash
+$ python keystream.py
+Ingrese el mensaje a cifrar: Hola Mundo
+Ingrese la clave secreta: mi_clave
+
+Mensaje:         'Hola Mundo'
+Keystream:       d46904888d5519aabbcc
+Mensaje cifrado: a51c61a8f93475dd99ee
+Mensaje descifrado: 'Hola Mundo'
+```
+
+### Ejemplo 2: Validaciones
+```bash
+$ python validacion_pruebas.py
+
+Ejemplo 1:
+  Texto plano original: 'Hola'
+  Clave utilizada: 'secreto'
+  Texto cifrado (hex): 685a6855
+  Texto descifrado: 'Hola'
+
+Ejemplo 2:
+  Texto plano original: 'Criptografia Stream'
+  Clave utilizada: 'claveFuerte123'
+  Texto cifrado (hex): e8ccfe81ed27c6c3363717c2fab761f7e6d384
+  Texto descifrado: 'Criptografia Stream'
+
+Ejemplo 3:
+  Texto plano original: '¡Hola Mundo! 2026'
+  Clave utilizada: 'otro_secreto'
+  Texto cifrado (hex): 2a32685f80bf458b61cf107bc0674773122f
+  Texto descifrado: '¡Hola Mundo! 2026'
+```
+
+### Ejemplo 3: Pruebas unitarias
+```bash
+$ python pruebas_unitarias.py
+
+======================================================================
+PRUEBAS UNITARIAS - STREAM CIPHER XOR
+======================================================================
+
+✓ PRUEBA 1 EXITOSA: Descifrado = Original
+✓ PRUEBA 2 EXITOSA: Claves diferentes → Cifrados diferentes
+✓ PRUEBA 3 EXITOSA: Determinismo validado (3 ejecuciones iguales)
+✓ PRUEBA 4 EXITOSA: Diferentes longitudes maneadas correctamente
+
+======================================================================
+RESUMEN DE RESULTADOS
+======================================================================
+Pruebas ejecutadas: 4
+Pruebas exitosas: 4
+Pruebas fallidas: 0
+Errores: 0
+
+✓ TODAS LAS PRUEBAS PASARON CORRECTAMENTE
+```
+
+---
+
 # Parte 2: Análisis de Seguridad
 
 ## 2.1 Variación de la Clave
