@@ -1,6 +1,6 @@
-def padding(string, block_size):
-    if not isinstance(string, str):
-        raise TypeError("string debe ser de tipo str")
+def padding(data: bytes, block_size: int) -> bytes:
+    if not isinstance(data, bytes):
+        raise TypeError("data debe ser de tipo bytes")
 
     if not isinstance(block_size, int):
         raise TypeError("block_size debe ser de tipo int")
@@ -8,17 +8,15 @@ def padding(string, block_size):
     if block_size <= 0:
         raise ValueError("block_size debe ser mayor que 0")
 
-    if len(string) > block_size:
-        raise ValueError("El tamaño del bloque debe ser mayor o igual a la longitud del string.")
+    if len(data) > block_size:
+        raise ValueError("El tamaño del bloque debe ser mayor o igual a la longitud de data.")
 
-    block_sizes = list(string)
-    faltantes = block_size - len(string)
+    faltantes = block_size - len(data)
 
     if faltantes > 0:
-        byte_padding = hex(faltantes)
-        block_sizes.extend([byte_padding] * faltantes)
+        return data + bytes([faltantes]) * faltantes
 
-    return block_sizes
+    return data
 
 
-print(padding("tu", 8))
+print(padding(b"tu", 8))
