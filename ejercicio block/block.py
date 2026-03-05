@@ -1,4 +1,5 @@
 def padding(data: bytes, block_size: int) -> bytes:
+    """Aplica padding PKCS#7: rellena con bytes que indican el valor de los bytes faltantes."""
     if not isinstance(data, bytes):
         raise TypeError("data debe ser de tipo bytes")
 
@@ -19,4 +20,5 @@ def padding(data: bytes, block_size: int) -> bytes:
     return data
 
 
-print(padding(b"tu", 8))
+if __name__ == "__main__":
+    print(padding(b" ", 8))
