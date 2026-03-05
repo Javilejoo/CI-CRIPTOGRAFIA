@@ -48,6 +48,17 @@ P_TABLE = [
      2,  8, 24, 14, 32, 27,  3,  9, 19, 13, 30,  6, 22, 11,  4, 25
 ]
 
+# Permutación Inversa Final (IP^-1)
+IP_INV_TABLE = [
+    40, 8, 48, 16, 56, 24, 64, 32, 39, 7, 47, 15, 55, 23, 63, 31,
+    38, 6, 46, 14, 54, 22, 62, 30, 37, 5, 45, 13, 53, 21, 61, 29,
+    36, 4, 44, 12, 52, 20, 60, 28, 35, 3, 43, 11, 51, 19, 59, 27,
+    34, 2, 42, 10, 50, 18, 58, 26, 33, 1, 41,  9, 49, 17, 57, 25
+]
+
+# Número de rotaciones a la izquierda por ronda
+SHIFTS_TABLE = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
+
 S_BOXES = [
     [[14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7], [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8], [4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0], [15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13]],
     [[15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10], [3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5], [0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15], [13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9]],
@@ -72,7 +83,6 @@ def read_txt(file_name):
     
     print(f"Contenido original (bytes): {data}")
     return data
-print(read_txt('des.txt'))
 
 def generar_bloques_64bits(data_bytes):
     """Aplica padding original de bytes y luego divide en bloques de 64 bits."""
@@ -99,64 +109,25 @@ def generar_bloques_64bits(data_bytes):
     return bloques_binarios
 
 
-def des(bloques_binarios):
-    # Generar una clave aleatoria de 64 bits para cada ejecución
-    clave_bytes = os.urandom(8)
-    clave_bin = "".join(format(byte, '08b') for byte in clave_bytes)
-    print(f"Clave Aleatoria (64 bits): {clave_bin}")
-
-    # --- Key Schedule para Ronda 1 ---
-    clave_56 = ''.join(clave_bin[i-1] for i in PC1_TABLE)
-    c_0, d_0 = clave_56[:28], clave_56[28:]
-    c_1, d_1 = left_rotate(c_0, 1), left_rotate(d_0, 1)
-    clave_ronda_1 = ''.join((c_1 + d_1)[i-1] for i in PC2_TABLE)
-    print(f"Clave de ronda 1 (48 bits, PC-2): {clave_ronda_1}")
-
-    for bloque in bloques_binarios:
-        # Aplicar la permutación inicial
-        bloque_permutado = ''.join(bloque[i-1] for i in IP_TABLE)
-        print(f"\n--- Procesando Bloque ---")
-        print(f"Bloque permutado: {bloque_permutado}")
-
-        # Dividir el bloque en mitades L0 y R0
-        l_0, r_0 = bloque_permutado[:32], bloque_permutado[32:]
-        print(f"l0: {l_0}")
-        print(f"r0: {r_0}")
-
-        # --- CÁLCULO F(R0, K1) PARA RONDA 1 ---
-        f_resultado = f_function(r_0, clave_ronda_1)
-        
-        # --- CÁLCULO DE L1 y R1 ---
-        l_1 = r_0
-        r_1 = format(int(l_0, 2) ^ int(f_resultado, 2), '032b')
-        
-        print(f"\n--- Resultados de Ronda 1 ---")
-        print(f"L1: {l_1}")
-        print(f"R1: {r_1}")
-
-def f_function(r0, k1):
+def f_function(r, k, verbose=False):
     """Calcula la función F de Feistel: F(R, K)"""
     # 1. Expansión (32 -> 48 bits)
-    r0_expandido = ''.join(r0[i-1] for i in E_TABLE)
-    print(f"R0 expandido (48 bits): {r0_expandido}")
+    r_expandido = ''.join(r[i-1] for i in E_TABLE)
 
-    # 2. XOR con la clave de la ronda (K1)
-    xor_res = int(r0_expandido, 2) ^ int(k1, 2)
+    # 2. XOR con la clave de la ronda
+    xor_res = int(r_expandido, 2) ^ int(k, 2)
     xor_res_bin = format(xor_res, '048b')
-    print(f"Resultado XOR (R0_E ^ K1): {xor_res_bin}")
 
     # 3. Sustitución con S-Boxes
-    sboxes_resultado = s_box_substitution(xor_res_bin)
+    sboxes_resultado = s_box_substitution(xor_res_bin, verbose)
 
     # 4. Permutación P
     resultado_p = "".join(sboxes_resultado[i-1] for i in P_TABLE)
-    print(f"Resultado tras Permutación P: {resultado_p}")
     return resultado_p
 
-def s_box_substitution(xor_bin):
+def s_box_substitution(xor_bin, verbose=False):
     """Divide la entrada de 48 bits y aplica las S-Boxes."""
     bloques_6bits = [xor_bin[i:i+6] for i in range(0, len(xor_bin), 6)]
-    print(f"Bloques de 6 bits para S-boxes: {bloques_6bits}")
     
     sboxes_out = ""
     for i in range(8):
@@ -167,10 +138,7 @@ def s_box_substitution(xor_bin):
         valor_decimal = S_BOXES[i][fila][columna]
         bloque_4bits = format(valor_decimal, '04b')
         sboxes_out += bloque_4bits
-        
-        print(f"S-Box {i+1}: Bloque {bloque} -> Fila {fila}, Col {columna} -> Valor {valor_decimal} ({bloque_4bits})")
 
-    print(f"\nResultado Final tras las 8 S-Boxes (32 bits): {sboxes_out}")
     return sboxes_out
 
 
@@ -178,15 +146,141 @@ def left_rotate(bits, n):
     """Realiza una rotación circular a la izquierda de 'n' posiciones en la cadena de bits."""
     return bits[n:] + bits[:n]
 
+def bin_to_hex(bin_str):
+    """Convierte una cadena binaria a hexadecimal."""
+    return format(int(bin_str, 2), '0' + str(len(bin_str)//4) + 'X')
+
+def generar_subclaves(clave_bin):
+    """Genera las 16 subclaves de 48 bits a partir de la clave de 64 bits."""
+    # Aplicar PC-1 (64 -> 56 bits)
+    clave_56 = ''.join(clave_bin[i-1] for i in PC1_TABLE)
+    
+    # Dividir en C0 y D0 (28 bits cada uno)
+    c = clave_56[:28]
+    d = clave_56[28:]
+    
+    subclaves = []
+    for ronda in range(16):
+        # Rotar C y D según la tabla de shifts
+        c = left_rotate(c, SHIFTS_TABLE[ronda])
+        d = left_rotate(d, SHIFTS_TABLE[ronda])
+        
+        # Concatenar y aplicar PC-2 para obtener la subclave de 48 bits
+        cd = c + d
+        subclave = ''.join(cd[i-1] for i in PC2_TABLE)
+        subclaves.append(subclave)
+    
+    return subclaves
+
+def des_encrypt(bloques_binarios, clave_bin=None):
+    """Cifra los bloques usando DES con 16 rondas."""
+    # Generar clave si no se proporciona
+    if clave_bin is None:
+        clave_bytes = os.urandom(8)
+        clave_bin = "".join(format(byte, '08b') for byte in clave_bytes)
+    
+    print(f"\nClave (64 bits): {bin_to_hex(clave_bin)}")
+    
+    # Generar las 16 subclaves
+    subclaves = generar_subclaves(clave_bin)
+    
+    bloques_cifrados = []
+    
+    for bloque in bloques_binarios:
+        print(f"\n{'='*50}")
+        print("ENCRYPTION")
+        
+        # Permutación Inicial (IP)
+        bloque_ip = ''.join(bloque[i-1] for i in IP_TABLE)
+        print(f"After initial permutation: {bin_to_hex(bloque_ip)}")
+        
+        # Dividir en L0 y R0
+        L = bloque_ip[:32]
+        R = bloque_ip[32:]
+        
+        # 16 Rondas de Feistel
+        for ronda in range(16):
+            L_prev = L
+            R_prev = R
+            
+            # L[i] = R[i-1]
+            L = R_prev
+            
+            # R[i] = L[i-1] XOR F(R[i-1], K[i])
+            f_result = f_function(R_prev, subclaves[ronda], verbose=False)
+            R = format(int(L_prev, 2) ^ int(f_result, 2), '032b')
+            
+            print(f"Round {ronda+1:2d}   {bin_to_hex(L)}   {bin_to_hex(R)}   {bin_to_hex(subclaves[ronda])}")
+        
+        # Intercambio final (R16 + L16) y Permutación Inversa
+        pre_output = R + L  # Nota: se intercambian R y L
+        bloque_cifrado = ''.join(pre_output[i-1] for i in IP_INV_TABLE)
+        
+        print(f"Cipher Text: {bin_to_hex(bloque_cifrado)}")
+        bloques_cifrados.append(bloque_cifrado)
+    
+    return bloques_cifrados, clave_bin
+
+def des_decrypt(bloques_cifrados, clave_bin):
+    """Descifra los bloques usando DES con 16 rondas (claves en orden inverso)."""
+    # Generar las 16 subclaves
+    subclaves = generar_subclaves(clave_bin)
+    
+    bloques_descifrados = []
+    
+    for bloque in bloques_cifrados:
+        print(f"\n{'='*50}")
+        print("DECRYPTION")
+        
+        # Permutación Inicial (IP)
+        bloque_ip = ''.join(bloque[i-1] for i in IP_TABLE)
+        print(f"After initial permutation: {bin_to_hex(bloque_ip)}")
+        
+        # Dividir en L0 y R0
+        L = bloque_ip[:32]
+        R = bloque_ip[32:]
+        
+        # 16 Rondas de Feistel (con subclaves en orden INVERSO)
+        for ronda in range(16):
+            L_prev = L
+            R_prev = R
+            
+            # L[i] = R[i-1]
+            L = R_prev
+            
+            # R[i] = L[i-1] XOR F(R[i-1], K[16-i]) - Claves en orden inverso
+            f_result = f_function(R_prev, subclaves[15 - ronda], verbose=False)
+            R = format(int(L_prev, 2) ^ int(f_result, 2), '032b')
+            
+            print(f"Round {ronda+1:2d}   {bin_to_hex(L)}   {bin_to_hex(R)}   {bin_to_hex(subclaves[15-ronda])}")
+        
+        # Intercambio final (R16 + L16) y Permutación Inversa
+        pre_output = R + L
+        bloque_descifrado = ''.join(pre_output[i-1] for i in IP_INV_TABLE)
+        
+        print(f"Plain Text: {bin_to_hex(bloque_descifrado)}")
+        bloques_descifrados.append(bloque_descifrado)
+    
+    return bloques_descifrados
+
 if __name__ == "__main__":
-    # 1. Leer como bytes
+    # 1. Leer mensaje desde archivo
     datos = read_txt('des.txt')
     
     # 2. Agrupar y convertir a binario usando el padding de bytes
     lista_de_bloques = generar_bloques_64bits(datos)
     
-    # 3. Procesar los bloques con DES
-    des(lista_de_bloques)
+    # 3. Cifrar con DES (16 rondas)
+    bloques_cifrados, clave_usada = des_encrypt(lista_de_bloques)
+    
+    # 4. Descifrar con DES (verificación)
+    bloques_descifrados = des_decrypt(bloques_cifrados, clave_usada)
+    
+    # 5. Mostrar resumen
+    print(f"\n{'='*50}")
+    print("RESUMEN")
+    print(f"Mensaje original: {datos}")
+    print(f"Clave usada (hex): {bin_to_hex(clave_usada)}")
 
 
 
