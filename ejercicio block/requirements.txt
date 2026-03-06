@@ -1,0 +1,7 @@
+# Dependencias para cifrado por bloques - DES, 3DES y AES
+
+# PyCryptodome - Librería criptográfica para AES y padding PKCS#7
+pycryptodome>=3.20.0
+
+# Pillow - Procesamiento de imágenes (conversión PNG a BMP)
+Pillow>=10.0.0
