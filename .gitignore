@@ -1,0 +1,3 @@
+*.pem
+*.zip
+__pycache__/
