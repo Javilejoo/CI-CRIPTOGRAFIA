@@ -1,6 +1,6 @@
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-from generar_claves import generar_par_claves   
+ 
 
 def cifrar_con_rsa(mensaje: bytes, public_key_pem: bytes) -> bytes:
     # Cargar la clave pública
