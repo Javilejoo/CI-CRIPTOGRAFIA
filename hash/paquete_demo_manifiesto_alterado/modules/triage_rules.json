@@ -1,0 +1,5 @@
+{
+  "module": "triage_rules",
+  "version": "2.1.0",
+  "rules": ["cardio", "pediatria", "urgencias"]
+}
